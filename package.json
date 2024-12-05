@@ -2,7 +2,7 @@
   "name": "torrentfreak-bot-js",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/bot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +12,11 @@
   "dependencies": {
     "@elastic/elasticsearch": "^7.9.1",
     "discord.js": "^12.4.1",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "request": "^2.88.2",
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
+    "rss-to-json": "^2.1.1",
+    "he": "^1.2.0"
   }
 }

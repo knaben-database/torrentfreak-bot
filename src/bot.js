@@ -37,26 +37,9 @@ clientBot.login(process.env.DISCORDJS_BOT_TOKEN);
 // timers
 require("./timers/checknewlyposted");
 var alreadyShown = [];
-setTimeout(newPostTimer, 1000*5, discord, clientBot, alreadyShown); // Run imidiently, 5 seconds
-setInterval(newPostTimer, 1000*60*30, discord, clientBot, alreadyShown); // 30 minutes loop
 
-// Command handler
-// (async function registerCommands(dir = 'commands') {
-//     {
-//         let files = await fs.readdir(path.join(__dirname, dir));
-//
-//         for(let file of files){
-//             let stat = await fs.lstat(path.join(__dirname, dir, file));
-//             if(stat.isDirectory())
-//                 registerCommands(path.join(dir, file));
-//             else{
-//                 if(file.endsWith(".js")){
-//                     let cmdName = file.substring(0, file.indexOf(".js"));
-//                     let cmdModule = require(path.join(__dirname, dir, file))
-//                     clientBot.commands.set(cmdName, cmdModule);
-//                 }
-//             }
-//         }
-//
-//     }
-// })()
+// Run newPostTimer 5 seconds after start
+setTimeout(newPostTimer, 1000*5, discord, clientBot, alreadyShown);
+
+// Do the same, but loop forever every 30 minutes
+setInterval(newPostTimer, 1000*60*30, discord, clientBot, alreadyShown);

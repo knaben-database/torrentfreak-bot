@@ -1,74 +1,71 @@
-newPostTimer = function(discord, clientBot, alreadyShown) {
-    let mainServer = clientBot.guilds.cache.get('***REMOVED***');
-    let TFChannel = mainServer.channels.cache.get('***REMOVED***');
-    const request = require("request");
+newPostTimer = async function(discord, clientBot, alreadyShown) {
+    const mainServer = clientBot.guilds.cache.get(process.env.DISCORD_SERVER_ID);
+    const TFChannel = mainServer.channels.cache.get(process.env.DISCORD_CHANNEL_ID);
     const axios = require('axios');
     const cheerio = require('cheerio');
+    const he = require('he');
 
     var Feed = require('rss-to-json');
-    // Promise
-    Feed.load('https://torrentfreak.com/feed/').then(rss => {
-        var rawdata = JSON.stringify(rss, null, 3);
-        var jsondata = JSON.parse(rawdata);
-        var totalHits = jsondata["items"].length;
-        if (totalHits === 0) {
-            console.log("No hits for some reason? RSS feed down?");
-            return;
-        }
 
-        var theItem;
+    const rss = await Feed.parse('https://torrentfreak.com/feed/');
+    var rawdata = JSON.stringify(rss, null, 3);
+    var jsondata = JSON.parse(rawdata);
+    const items = jsondata["items"];
+    if (items.length === 0) {
+        console.log("No hits for some reason? RSS feed down?");
+        return;
+    }
 
-        if (alreadyShown === undefined || alreadyShown.length === 0) {
-            // this will only run once to sync up
-            console.log("Syncing with the " + totalHits + " latest posts");
-            for (var i = 0; i < totalHits; i++) {
-                if (!alreadyShown.includes(jsondata["items"][i]["id"])) {
-                    alreadyShown.push(jsondata["items"][i]["id"]);
-                    console.log("Synced: " + jsondata["items"][i]["id"]);
-                }
-            }
-        } else {
-            for (var i = 0; i < totalHits; i++) {
-                if (!alreadyShown.includes(jsondata["items"][i]["id"])) {
-                    alreadyShown.push(jsondata["items"][i]["id"]);
-                    console.log("new post! " + jsondata["items"][i]["id"]);
-                    theItem = jsondata["items"][i];
-                    console.log(theItem);
-                    var theURL = theItem["url"];
-                    request({
-                        method: 'GET',
-                        url: theURL
-                    }, (err, res, body) => {
+   if (alreadyShown === undefined || alreadyShown.length === 0) {
+       // this will only run once to sync up
+       console.log("Syncing with the " + items.length + " latest posts");
+       for (var i = 0; i < items.length; i++) {
+           if (!alreadyShown.includes(items[i]["id"])) {
+               alreadyShown.push(items[i]["id"]);
+               console.log("Synced: " + items[i]["id"]);
+           }
+       }
+   } else {
+    for (var i = 0; i < items.length; i++) {
+        const item = items[i];
+        const id = item["id"];
+           if (!alreadyShown.includes(id)) {
+               alreadyShown.push(id);
+               console.log("new post! " + id);
+               console.log(item);
+               // This must have changed the last 3 years
+               // var theURL = item["url"];
+               const theURL = id;
+               try {
+                   const response = await axios.get(theURL);
+                   let $ = cheerio.load(response.data);
+                   let post = {
+                       twitter_img: $('meta[name="twitter:image"]').attr('content')
+                   }
+                   var thaIMG = post['twitter_img'];
+                   console.log(thaIMG);
+                   var tempDesc = item["description"];
+                   if (tempDesc.includes("\n")) {
+                       tempDesc = tempDesc.split("\n")[0];
+                   }
+                   $ = cheerio.load(tempDesc);
+                   var Thedescription = $('body').text();
 
-                        if (err) return console.error(err);
+                   var decodedTitle = he.decode(item["title"]);
 
-                        let $ = cheerio.load(body);
-
-                        let post = {
-                            twitter_img: $('meta[name="twitter:image"]').attr('content')
-                        }
-                        var thaIMG = post['twitter_img'];
-                        console.log(thaIMG);
-
-                        var tempDesc = theItem["description"];
-                        if (tempDesc.includes("\n")) {
-                            tempDesc = tempDesc.split("\n")[0];
-                        }
-
-                        $ = cheerio.load(tempDesc);
-                        var Thedescription = cheerio.text($('body'));
-                        const exampleEmbed = new discord.MessageEmbed()
-                            .setColor("#ff4897")
-                            .setTitle(theItem["title"])
-                            .setURL(theItem["link"])
-                            .setDescription(Thedescription)
-                            .setImage(thaIMG)
-                            .setTimestamp(theItem['published'])
-                            .setFooter('Author: ' + theItem['author']);
-                        TFChannel.send(exampleEmbed);
-                    });
-                }
-            }
-        }
-    });
+                   const exampleEmbed = new discord.MessageEmbed()
+                                                   .setColor("#ff4897")
+                                                   .setTitle(decodedTitle)
+                                                   .setURL(item["link"])
+                                                   .setDescription(Thedescription)
+                                                   .setImage(thaIMG)
+                                                   .setTimestamp(item['published'])
+                                                   .setFooter('Author: ' + item['author']);
+                   TFChannel.send(exampleEmbed);
+               } catch (err) {
+                   console.error('Error fetching data:', err);
+               }
+           }
+       }
+   }
 }
