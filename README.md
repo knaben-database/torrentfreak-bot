@@ -2,6 +2,8 @@
 
 Discord bot that automatically posts new articles from torrentfreak.
 
+![Bot found 2 new articles in the last 30 minutes](/screenshots/Screenshot_2024-12-05_21:08:58.png)
+
 ## Setting up
 
 ### Create new Discord bot
@@ -29,6 +31,5 @@ DISCORD_CHANNEL_ID=1234567890123456789
 
 Node is required to run this bot. To run it, first do `npm install` in the project root directory, then run it with `node .`
 
-## Wollah
+***Wollah***
 
-![Bot found 2 new articles in the last 30 minutes](/screenhots/Screenshot_2024-12-05_21:08:58.png)
